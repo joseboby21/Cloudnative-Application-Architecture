@@ -17,12 +17,15 @@ type lruCache struct {
 }
 
 func NewCache(size int) Cacher {
-	return &lruCache{size: size, remaining: size, cache: make(map[string]string), queue: make([]string, size)}
+	return &lruCache{size: size, remaining: size, cache: make(map[string]string), queue: make([]string,0)}
 }
 
 func (lru *lruCache) Get(key interface{}) (interface{}, error) {
 	// Your code here....
-	k := key.(string)
+	k,ok := key.(string)
+	if !ok{
+		return nil,errors.New("Not a valid input")
+	}
 	if _, ok := lru.cache[k]; !ok {
 		return nil, errors.New("Not present in Cache")
 	}
@@ -33,19 +36,34 @@ func (lru *lruCache) Get(key interface{}) (interface{}, error) {
 
 func (lru *lruCache) Put(key, val interface{}) error {
 	// Your code here....
-	k := key.(string)
-	v := val.(string)
-	if _, ok := lru.cache[k]; ok {
-		return errors.New("Already present in Cache")
+	k,ok1 := key.(string)
+	
+	if !ok1{
+		return errors.New("Not a valid input")
 	}
-	if lru.remaining == 0 {
-		delete(lru.cache, lru.queue[0])
-		lru.qDel(lru.queue[0])
-		lru.remaining++
+
+	v,ok2 := val.(string)
+
+	if !ok2{
+		return errors.New("Not a valid input")
 	}
-	lru.cache[k] = v
-	lru.queue = append(lru.queue, k)
-	lru.remaining--
+
+	_,ok3 := lru.cache[k]
+
+	if ok3{
+		lru.cache[k] = v
+		lru.qDel(k)
+		lru.queue = append(lru.queue, k)
+	}else{
+		if lru.remaining == 0 {
+			delete(lru.cache, lru.queue[0])
+			lru.qDel(lru.queue[0])
+			lru.remaining++
+		}
+		lru.cache[k] = v
+		lru.queue = append(lru.queue, k)
+		lru.remaining--
+	}	
 	return nil
 }
 

@@ -18,15 +18,13 @@ func TestReadWrite(t *testing.T) {
 
 func TestWriteWithEviction(t *testing.T) {
 	testlru := NewCache(3)
-	inputs := make(map[string]string)
-	inputs["key1"] = "val1"
-	inputs["key2"] = "val2"
-	inputs["key3"] = "val3"
-	inputs["key4"] = "val4"
-	for k, v := range inputs {
-		testlru.Put(k, v)
-	}
-	if _, err := testlru.Get("key1"); err != nil {
+	
+	testlru.Put("key1", "val1")
+	testlru.Put("key2", "val2")
+	testlru.Put("key3", "val3")
+	testlru.Put("key1", "val1.1")
+	testlru.Put("key4", "val4")
+	if _, err := testlru.Get("key2"); err == nil {
 		t.Error("LRU replacement policy test failed")
 	}
 }

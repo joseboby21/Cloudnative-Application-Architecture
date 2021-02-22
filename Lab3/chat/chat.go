@@ -59,9 +59,9 @@ func broadcaster() {
 		case msg := <-messages:
 			// Broadcast incoming message to all
 			// clients' outgoing message channels.
-			name := strings.Fields(msg)
+			cliName := strings.Fields(msg)[0]
 			for cli := range clients {
-				if cli.name+":" != name[0]{
+				if cli.name!= cliName{
 					cli.chl <- msg
 				}
 			}
@@ -81,20 +81,25 @@ func handleConn(conn net.Conn) {
 	ch := make(chan string) // outgoing client messages
 	go clientWriter(conn, ch)
 
-	who := conn.RemoteAddr().String()
-	ch <- "You are " + who
-	messages <- who + " has arrived"
-	usr := client{name:who,chl:ch}
+	ch<- "What is your Name"
+	input := bufio.NewScanner(conn)
+	
+	var name string
+	if input.Scan(){
+		name = input.Text()
+	}
+	ch <- "You are " + name
+	messages <- name + " has arrived"
+	usr := client{name:name,chl:ch}
 	entering <- usr
 
-	input := bufio.NewScanner(conn)
 	for input.Scan() {
-		messages <- who + ": " + input.Text()
+		messages <- name + " : " + input.Text()
 	}
 	// NOTE: ignoring potential errors from input.Err()
 
 	leaving <- usr
-	messages <- who + " has left"
+	messages <- name + " has left"
 	conn.Close()
 }
 
