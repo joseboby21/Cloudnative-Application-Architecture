@@ -2,12 +2,12 @@
 package main
 
 import (
+	"Labs/Lab5/movieapi"
 	"context"
 	"log"
 	"os"
 	"time"
 
-	"https://github.com/joseboby21/Cloudnative-Application-Architecture/tree/master/Lab5/movieapi"
 	"google.golang.org/grpc"
 )
 
@@ -32,10 +32,32 @@ func main() {
 	}
 	// Timeout if server doesn't respond
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
 	r, err := c.GetMovieInfo(ctx, &movieapi.MovieRequest{Title: title})
 	if err != nil {
 		log.Fatalf("could not get movie info: %v", err)
 	}
 	log.Printf("Movie Info for %s %d %s %v", title, r.GetYear(), r.GetDirector(), r.GetCast())
+	cancel()
+
+	// Adding new movie detais to DB
+	ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+	r2, err := c.SetMovieInfo(ctx, &movieapi.MovieData{
+		Title:    "Batman Begins",
+		Year:     2005,
+		Director: "Christopher Nolan",
+		Cast:     []string{"Christian Bale", "Liam Neeson", "Gary Oldman", "Michael Caine"}})
+	if err != nil {
+		log.Fatalf("could not add movie info %s", err)
+	}
+	log.Printf("Addition of Movie to Database was %s \n", r2.Stat)
+	cancel()
+
+	// Trying to retrive the details of new movie added
+	ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+	r, err = c.GetMovieInfo(ctx, &movieapi.MovieRequest{Title: "Batman Begins"})
+	if err != nil {
+		log.Fatalf("could not get movie info: %v", err)
+	}
+	log.Printf("Movie Info for  Batman Begins %d %s %v", r.GetYear(), r.GetDirector(), r.GetCast())
+	cancel()
 }
